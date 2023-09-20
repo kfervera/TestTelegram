@@ -10,12 +10,12 @@
     <version>1.0.0</version>
 
     <organization>
-        <name>Example Company</name>
-        <url>http://www.example.com/</url>
+        <name>bi2bit Americas</name>
+        <url>http://bit2bitamericas.com/</url>
     </organization>
+    <name>bit2bit Americas - Telegram Integration</name>
+    <description>Integración de Jira con Telegram para la consulta de issues</description>
 
-    <name>telegramIntegration</name>
-    <description>This is the com.bit2bitamericas.jira:telegramIntegration plugin for Atlassian JIRA.</description>
     <packaging>atlassian-plugin</packaging>
 
     <dependencies>
