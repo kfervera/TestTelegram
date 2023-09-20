@@ -150,7 +150,7 @@
     </build>
 
     <properties>
-        <jira.version>7.13.0</jira.version>
+        <jira.version>8.15.0</jira.version>
         <amps.version>8.1.2</amps.version>
         <plugin.testrunner.version>2.0.2</plugin.testrunner.version>
         <atlassian.spring.scanner.version>2.1.7</atlassian.spring.scanner.version>
