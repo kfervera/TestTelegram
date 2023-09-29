@@ -1,24 +1,57 @@
-<atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2">
-    <plugin-info>
-        <description>${project.description}</description>
-        <version>${project.version}</version>
-        <vendor name="${project.organization.name}" url="${project.organization.url}" />
-        <param name="plugin-icon">images/pluginIcon.png</param>
-        <param name="plugin-logo">images/pluginLogo.png</param>
-    </plugin-info>
+<?xml version="1.0" encoding="UTF-8"?>
 
-    <!-- add our i18n resource -->
-    <resource type="i18n" name="i18n" location="telegramIntegration"/>
-    
-    <!-- add our web resources -->
-    <web-resource key="telegramIntegration-resources" name="telegramIntegration Web Resources">
-        <dependency>com.atlassian.auiplugin:ajs</dependency>
-        
-        <resource type="download" name="telegramIntegration.css" location="/css/telegramIntegration.css"/>
-        <resource type="download" name="telegramIntegration.js" location="/js/telegramIntegration.js"/>
-        <resource type="download" name="images/" location="/images"/>
+<atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2"> 
+  <plugin-info> 
+    <description>${project.description}</description>  
+    <version>${project.version}</version>  
+    <vendor name="${project.organization.name}" url="${project.organization.url}"/>  
+    <param name="plugin-icon">images/pluginIcon.png</param>  
+    <param name="plugin-logo">images/pluginLogo.png</param>
+    <param name="configure.url">/plugins/servlet/TelegramIntegrationConfiguration</param>
+  </plugin-info>  
+  <!-- add our i18n resource -->  
+  <resource type="i18n" name="i18n" location="telegramIntegration"/>  
+  <!-- add our web resources -->  
+  <web-resource key="telegramIntegration-resources" name="telegramIntegration Web Resources"> 
+    <dependency>com.atlassian.auiplugin:ajs</dependency>  
+    <resource type="download" name="telegramIntegration.css" location="/css/telegramIntegration.css"/>  
+    <resource type="download" name="telegramIntegration.js" location="/js/telegramIntegration.js"/>  
+    <resource type="download" name="images/" location="/images"/>  
+    <context>telegramIntegration</context> 
+  </web-resource>
 
-        <context>telegramIntegration</context>
-    </web-resource>
-    
+  <component-import key="velocity-renderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
+  <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+  <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
+  <component-import key="loginUriProvider" interface="com.atlassian.sal.api.auth.LoginUriProvider"/>
+  <component-import key="ao" name="Active Objects components" interface="com.atlassian.activeobjects.external.ActiveObjects">
+    <description>Access to the Active Objects service</description>
+  </component-import>
+
+  <component key="GenericUtils" class="com.bit2bitamericas.jira.telegramIntegration.utils.GenericUtils" public="true">
+    <interface>com.bit2bitamericas.jira.telegramIntegration.utils.interfaces.Generic</interface>
+  </component>
+  <component key="Http" class="com.bit2bitamericas.jira.telegramIntegration.utils.HttpUtils" public="true">
+    <interface>com.bit2bitamericas.jira.telegramIntegration.utils.interfaces.Http</interface>
+  </component>
+  <component key="JiraServiceGeneral" class="com.bit2bitamericas.jira.telegramIntegration.services.JiraServiceGeneral" public="true">
+    <interface>com.bit2bitamericas.jira.telegramIntegration.services.interfaces.JiraService</interface>
+  </component>
+  <component key="PantallaDeConfiguracionServletAdministrador" class="com.bit2bitamericas.jira.telegramIntegration.services.PantallaDeConfiguracionServletAdministrador" public="true">
+    <interface>com.bit2bitamericas.jira.telegramIntegration.services.interfaces.PantallaConfiguracionServlet</interface>
+  </component>
+  <component key="TelegramApiService" class="com.bit2bitamericas.jira.telegramIntegration.services.TelegramApiService" public="true">
+    <interface>com.bit2bitamericas.jira.telegramIntegration.services.interfaces.ITelegramApiService</interface>
+  </component>
+  <rest name="Telegram Rest Resource" i18n-name-key="telegram-rest-resource.name" key="telegram-rest-resource" path="/telegram-integration" version="1.0">
+    <description key="telegram-rest-resource.description">The Telegram Rest Resource Plugin</description>
+  </rest>
+  <ao key="ao-module">
+    <description>The configuration of the Active Objects Service</description>
+    <entity>com.bit2bitamericas.jira.telegramIntegration.activeObjects.interfaces.ChatState</entity>
+  </ao>
+  <servlet name="Pantalla Administrador Sevlet" i18n-name-key="pantalla-administrador-sevlet.name" key="pantalla-administrador-sevlet" class="com.bit2bitamericas.jira.telegramIntegration.servlets.PantallaAdministradorSevlet"> 
+    <description key="pantalla-administrador-sevlet.description">The Pantalla Administrador Sevlet Plugin</description>  
+    <url-pattern>/TelegramIntegrationConfiguration</url-pattern>
+  </servlet>
 </atlassian-plugin>

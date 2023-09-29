@@ -1,0 +1,27 @@
+<html>
+<head>
+    <title>Configuración Global</title>
+    <meta name="decorator" content="atl.admin"/>
+    $webResourceManager.requireResourcesForContext("bit2bitTelegramIntegration")
+</head>
+<body>
+<form class="aui" method="post">
+    <h3>Información Sistema Externo</h3>
+    <div class="field-group">
+        <label>Telegram API Token<span class="aui-icon icon-required"></span></label>
+        <input type="text" name="telegramApiToken" value='$!settings.telegramApiToken' class="text" required>
+        <div class="description">Ingresar token de telegram, por ejemplo: XxxXX:12212-111-454545</div>
+    </div>
+    <div class="field-group">
+        <label>Key de Proyecto<span class="aui-icon icon-required"></span></label>
+        <input type="text" name="projectKey" value='$!settings.projectKey' class="text" required>
+        <div class="description">Ingresar el Key del proyecto, por ejemplo: TKT</div>
+    </div>
+    <div class="buttons-container">
+        <div class="buttons">
+            <input class="button submit" type="submit" value="Save">
+        </div>
+    </div>
+</form>
+</body>
+</html>
