@@ -8,17 +8,19 @@ import com.bit2bitamericas.jira.telegramIntegration.activeObjects.interfaces.Cha
 import com.bit2bitamericas.jira.telegramIntegration.services.interfaces.ITelegramApiService;
 import com.bit2bitamericas.jira.telegramIntegration.services.interfaces.PantallaConfiguracionServlet;
 import com.bit2bitamericas.jira.telegramIntegration.settings.servlets.PantallaAdministradorSettings;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class TelegramApiService implements ITelegramApiService {
-    //private static final Logger log = LoggerFactory.getLogger(TelegramApiService.class);
+    private static final Logger log = LoggerFactory.getLogger(TelegramApiService.class);
     private final PantallaConfiguracionServlet pantallaConfiguracionServlet;
     private final ActiveObjects activeObjects;
     public TelegramApiService(ActiveObjects activeObjects,
@@ -85,10 +87,10 @@ public class TelegramApiService implements ITelegramApiService {
         httpPost.setHeader("Content-type", "application/json");
         httpPost.setEntity(entity);
         client.execute(httpPost);
-        //HttpResponse response = client.execute(httpPost);
-        //HttpEntity httpEntity = response.getEntity();
-        //String apiOutput = EntityUtils.toString(httpEntity);
-        //log.error(apiOutput);
+        HttpResponse response = client.execute(httpPost);
+        HttpEntity httpEntity = response.getEntity();
+        String apiOutput = EntityUtils.toString(httpEntity);
+        log.error(apiOutput);
     }
 
     private JSONObject mapButtons(List<String> stringButtons) throws JSONException {

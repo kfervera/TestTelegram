@@ -4,9 +4,11 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
+import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.json.JSONException;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import com.atlassian.sal.api.user.UserManager;
 import com.bit2bitamericas.jira.telegramIntegration.activeObjects.interfaces.ChatState;
@@ -15,9 +17,15 @@ import com.bit2bitamericas.jira.telegramIntegration.services.interfaces.JiraServ
 import com.bit2bitamericas.jira.telegramIntegration.services.interfaces.PantallaConfiguracionServlet;
 import com.bit2bitamericas.jira.telegramIntegration.settings.servlets.PantallaAdministradorSettings;
 import net.java.ao.Query;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.atlassian.jira.util.json.JSONObject;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import com.bit2bitamericas.jira.telegramIntegration.models.*;
@@ -30,17 +38,15 @@ public class TelegramRestResource {
     private final PantallaConfiguracionServlet pantallaConfiguracionServlet;
     private final JiraService jiraService;
     private final UserManager userManager;
-    private final IssueManager issueManager;
     public TelegramRestResource(ActiveObjects activeObjects,
                                 ITelegramApiService iTelegramApiService,
                                 PantallaConfiguracionServlet pantallaConfiguracionServlet,
-                                JiraService jiraService, UserManager userManager, IssueManager issueManager) {
+                                JiraService jiraService, UserManager userManager) {
         this.activeObjects = activeObjects;
         this.iTelegramApiService = iTelegramApiService;
         this.pantallaConfiguracionServlet = pantallaConfiguracionServlet;
         this.jiraService = jiraService;
         this.userManager = userManager;
-        this.issueManager = issueManager;
 
         int count = 0;
         boolean isInitialized = false;
@@ -169,24 +175,25 @@ public class TelegramRestResource {
                         iTelegramApiService.sendMessage(chat.get("id"), "Buscando");
                         log.error(data);
                         MutableIssue issue = jiraService.obtenerMutableIssuePorKey(data);
-                        log.error(issue.getKey());
-                        log.error(issue.getSummary());
 
                         if(issue == null){
                             iTelegramApiService.sendMessage(chat.get("id"), "Lo siento, no pude encontrar el ticket");
                             activeObjects.delete(chatState);
                             break;
                         }
+                        ApplicationUser assignee = issue.getAssignee();
+                        String asignado = "(Unassigned)";
+                        if(assignee != null) asignado = assignee.getDisplayName() + " (" + assignee.getUsername() +  ")";
                         Comment lastComment = ComponentAccessor.getCommentManager().getLastComment(issue);
                         String comment = "";
                         if(lastComment != null) comment = lastComment.getBody();
-                        String sla = issue.getCustomFieldValue(ComponentAccessor.getCustomFieldManager().getCustomFieldObject("customfield_10217")).toString();
-                        String result = "Ticket: " + issue.getKey() + "\n" +
-                                "Summary: " + issue.getSummary()+ "\n" +
-                                "Estado: " + issue.getStatus().getName()+ "\n" +
-                                "Asignado: " + issue.getAssignee().getDisplayName() + "(" + issue.getAssignee().getUsername() +  ")\n" +
-                                "SLA: " + sla + "\n" +
-                                "Comentario:\n" + comment;
+                        String sla = getSla(issue);
+                        String result = "Ticket:           " + issue.getKey() + "\n" +
+                                        "Summary:     " + issue.getSummary()+ "\n" +
+                                        "Estado:          " + issue.getStatus().getName()+ "\n" +
+                                        "Asignado:     " + asignado +  "\n" +
+                                        "SLA:               " + sla + "\n" +
+                                        "Comentario:\n" + comment;
                         iTelegramApiService.sendMessage(chat.get("id"), result);
                     }else
                         iTelegramApiService.sendMessage(chat.get("id"), "Lo siento, no pude encontrar el ticket");
@@ -194,5 +201,34 @@ public class TelegramRestResource {
                     break;
             }
         }
+    }
+
+    private static String getSla(Issue issue) throws IOException, JSONException {
+        String uri = "http://localhost:8080/rest/servicedeskapi/request/"+issue.getId()+"/sla/1";
+        HttpClient client = HttpClients.createDefault();
+        HttpGet httpPost = new HttpGet(uri);
+        httpPost.setHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
+        HttpResponse response = client.execute(httpPost);
+
+        String json_string = EntityUtils.toString(response.getEntity());
+        long jsonValue = new JSONObject(json_string).getJSONObject("ongoingCycle")
+                .getJSONObject("remainingTime").getLong("millis");
+        String symbol = "";
+        if(jsonValue < 0) symbol="-";
+        long slaValue = Math.abs(jsonValue);
+        long minutes = (int) (slaValue / 60000);
+        if(minutes < 60) return symbol + minutes + "m";
+        long hours = minutes / 60;
+        if(hours < 8) {
+            long remainingMinutes = minutes - (hours * 60);
+            String minutesString = "";
+            if(remainingMinutes>0) minutesString = remainingMinutes + "m";
+            return symbol + hours + "h " + minutesString;
+        }
+        long days = hours / 8;
+        long remainingHours = hours - (days * 8);
+        String hoursString = "";
+        if (remainingHours > 0) hoursString = remainingHours + "h";
+        return symbol + days + "d " + hoursString;
     }
 }
